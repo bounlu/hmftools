@@ -86,7 +86,7 @@ class MicrosatelliteRead
         return new MicrosatelliteRead(refGenomeMicrosatellite, record);
     }
 
-    public void handleAlignment(final SAMRecord record, final CigarElement e, final int startReadIndex, final int startRefPos)
+    public void handleAlignment(final CigarElement e, final int startRefPos)
     {
         // check if this alignment spans the repeat
         // TODO: check for substitution??
@@ -147,7 +147,7 @@ class MicrosatelliteRead
         }
     }
 
-    public void handleDelete(final SAMRecord record, final CigarElement e, final int readIndex, final int startRefPos)
+    public void handleDelete(final CigarElement e, final int startRefPos)
     {
         int endRefPos = startRefPos + e.getLength() - 1;
         if(startRefPos >= refGenomeMicrosatellite.referenceStart() && endRefPos <= refGenomeMicrosatellite.referenceEnd())
@@ -164,7 +164,7 @@ class MicrosatelliteRead
         }
     }
 
-    public void handleLeftSoftClip(final SAMRecord record, final CigarElement element)
+    public void handleLeftSoftClip(final SAMRecord record)
     {
         // drop this read completely if the soft clip is near the repeat
         if(record.getAlignmentStart() >= refGenomeMicrosatellite.referenceStart())
@@ -173,7 +173,7 @@ class MicrosatelliteRead
         }
     }
 
-    public void handleRightSoftClip(final SAMRecord record, final CigarElement element, int startReadIndex, int startRefPosition)
+    public void handleRightSoftClip(int startRefPosition)
     {
         // drop this read completely if the soft clip is inside the repeat
         if(startRefPosition <= refGenomeMicrosatellite.referenceEnd())
@@ -201,11 +201,11 @@ class MicrosatelliteRead
                 case S:
                     if(i == 0)
                     {
-                        handleLeftSoftClip(record, e);
+                        handleLeftSoftClip(record);
                     }
                     else if(i == cigar.numCigarElements() - 1)
                     {
-                        handleRightSoftClip(record, e, readIndex, refBase);
+                        handleRightSoftClip(refBase);
                     }
                     readIndex += e.getLength();
                     break; // soft clip read bases
@@ -214,7 +214,7 @@ class MicrosatelliteRead
                     refBase += e.getLength();
                     break;  // reference skip
                 case D:
-                    handleDelete(record, e, readIndex, refBase);
+                    handleDelete(e, refBase);
                     refBase += e.getLength();
                     break;
                 case I:
@@ -224,7 +224,7 @@ class MicrosatelliteRead
                 case M:
                 case EQ:
                 case X:
-                    handleAlignment(record, e, readIndex, refBase);
+                    handleAlignment(e, refBase);
                     readIndex += e.getLength();
                     refBase += e.getLength();
                     break;
